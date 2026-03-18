@@ -41,7 +41,7 @@ class Program
             // Function to start a new importer
             async Task<NpgsqlBinaryImporter> StartImporterAsync(NpgsqlConnection c)
             {
-               return await c.BeginBinaryImportAsync("COPY transactions (TransactionId, AccountId, TransactionDate, TransactionType, TransactionCurrency, TransactionAmount, TransactionNarrative, ReversalIndicator, MID, CardType) FROM STDIN (FORMAT BINARY)");
+                return await c.BeginBinaryImportAsync("COPY transactions (TransactionId, AccountId, TransactionDate, TransactionType, TransactionCurrency, TransactionAmount, TransactionNarrative, ReversalIndicator, MID, CardType) FROM STDIN (FORMAT BINARY)");
             }
 
             var writer = await StartImporterAsync(conn);
@@ -50,36 +50,39 @@ class Program
             while (await csv.ReadAsync())
             {
                 await writer.StartRowAsync();
-                
+
                 // TransactionId (UUID)
                 writer.Write(csv.GetField<Guid>(0), NpgsqlDbType.Uuid);
-                
+
                 // AccountId (UUID)
                 writer.Write(csv.GetField<Guid>(1), NpgsqlDbType.Uuid);
-                
+
                 // TransactionDate (VARCHAR)
                 writer.Write(csv.GetField<string>(2)!, NpgsqlDbType.Varchar);
-                
+
                 // TransactionType (VARCHAR)
                 writer.Write(csv.GetField<string>(3)!, NpgsqlDbType.Varchar);
-                
+
                 // TransactionCurrency (CHAR(3))
                 writer.Write(csv.GetField<string>(4)!, NpgsqlDbType.Char);
-                
+
                 // TransactionAmount (DECIMAL)
                 writer.Write(csv.GetField<decimal>(5), NpgsqlDbType.Numeric);
-                
+
                 // TransactionNarrative (TEXT)
                 writer.Write(csv.GetField<string>(6)!, NpgsqlDbType.Text);
-                
+
                 // ReversalIndicator (CHAR(1))
                 writer.Write(csv.GetField<string>(7)!, NpgsqlDbType.Char);
-                
+
                 // MID (VARCHAR)
                 writer.Write(csv.GetField<string>(8)!, NpgsqlDbType.Varchar);
-                
+
                 // CardType (VARCHAR)
                 writer.Write(csv.GetField<string>(9)!, NpgsqlDbType.Varchar);
+
+                // MCC (VARCHAR)
+                writer.Write(csv.GetField<string>(10)!, NpgsqlDbType.Varchar);
 
                 rowCount++;
                 currentBatchCount++;

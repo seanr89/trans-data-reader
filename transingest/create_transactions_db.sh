@@ -13,7 +13,8 @@ CREATE TABLE IF NOT EXISTS transactions (
     TransactionNarrative TEXT,
     ReversalIndicator CHAR(1),
     MID VARCHAR(255),
-    CardType VARCHAR(50)
+    CardType VARCHAR(50),
+    MCC VARCHAR(4)
 );
 EOF
 
