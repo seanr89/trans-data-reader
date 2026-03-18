@@ -15,6 +15,21 @@ string[] reversalIndicators = ["N", "N", "N", "N", "N", "N", "N", "N", "N", "Y"]
 string[] narratives = ["payment", "transfer", "refund", "fee", "tax", "salary", "rent", "bill", "subscription", "purchase"];
 char[] alphaNumeric = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".ToCharArray();
 
+// MCC Ranges
+(int Min, int Max)[] mccRanges =
+[
+    (0001, 1499), // Agricultural services
+    (1500, 2999), // Contracted services
+    (4000, 4799), // Transportation services
+    (4800, 4999), // Utility services
+    (5000, 5599), // Retail outlet services
+    (5600, 5699), // Clothing shops
+    (5700, 7299), // Miscellaneous shops
+    (7300, 7999), // Business services
+    (8000, 8999), // Professional services and membership organisations
+    (9000, 9999)  // Government services
+];
+
 Console.WriteLine($"Starting generation of {RecordCount:N0} records to {FilePath}...");
 var sw = Stopwatch.StartNew();
 
@@ -22,31 +37,27 @@ using (var fileStream = new FileStream(FilePath, FileMode.Create, FileAccess.Wri
 using (var writer = new StreamWriter(fileStream, new UTF8Encoding(false))) // UTF8 without BOM similar to original if needed, or standard
 {
     // Write Header
-    writer.WriteLine("TransactionId|AccountId|TransactionDate|TransactionType|TransactionCurrency|TransactionAmount|TransactionNarrative|ReversalIndicator|MID|CardType");
+    writer.WriteLine("TransactionId|AccountId|TransactionDate|TransactionType|TransactionCurrency|TransactionAmount|TransactionNarrative|ReversalIndicator|MID|CardType|MCC");
 
     var rnd = new Random();
-    var sb = new StringBuilder(256); // Reusable string builder buffer if we were doing custom formatting, 
-                                     // but standard interpolation with StreamWriter is often good enough for this valid. 
-                                     // For max performance we can manually buffer, but let's try clean code first.
-    
+    var sb = new StringBuilder(256); // Reusable string builder buffer if we were doing custom formatting
+
     // Pre-calculate date range
     var startDate = new DateTime(2020, 1, 1);
     var rangeDays = (DateTime.Today - startDate).Days;
-    
+
     // Allocate buffer for MID once
     Span<char> midSpan = stackalloc char[15];
 
     for (int i = 0; i < RecordCount; i++)
     {
         // 1. TransactionId
-        // Guid.NewGuid() is relatively slow. For 10m records it might be noticeable (seconds). 
-        // We will stick to it for correctness as requested "Create ... files using the same format".
         var transactionId = Guid.NewGuid();
         var accountId = Guid.NewGuid();
 
         // 2. Date
         var date = startDate.AddDays(rnd.Next(rangeDays));
-        
+
         // 3. Select randoms
         var type = transactionTypes[rnd.Next(transactionTypes.Length)];
         var currency = currencies[rnd.Next(currencies.Length)];
@@ -54,16 +65,15 @@ using (var writer = new StreamWriter(fileStream, new UTF8Encoding(false))) // UT
         var narrative = narratives[rnd.Next(narratives.Length)];
         var reversal = reversalIndicators[rnd.Next(reversalIndicators.Length)];
         var card = cardTypes[rnd.Next(cardTypes.Length)];
-        
-        // 4. MID (Random String) - Let's generate a simple one
-        // To be fast, we can just pick random chars. Or simpler:
-        // writer.Write has overhead if called many times. 
-        // Interpolation is optimized in modern .NET.
-        
-        // Construct MID inline using the pre-allocated span
+
+        // 4. MCC
+        var range = mccRanges[rnd.Next(mccRanges.Length)];
+        var mcc = rnd.Next(range.Min, range.Max + 1).ToString("D4");
+
+        // 5. MID (Random String)
         for (int k = 0; k < 15; k++) midSpan[k] = alphaNumeric[rnd.Next(alphaNumeric.Length)];
-        
-         // Writing line
+
+        // Writing line
         writer.Write(transactionId);
         writer.Write('|');
         writer.Write(accountId);
@@ -82,7 +92,9 @@ using (var writer = new StreamWriter(fileStream, new UTF8Encoding(false))) // UT
         writer.Write('|');
         writer.Write(midSpan);
         writer.Write('|');
-        writer.WriteLine(card);
+        writer.Write(card);
+        writer.Write('|');
+        writer.WriteLine(mcc);
 
         if (i % 500_000 == 0)
         {
@@ -94,3 +106,4 @@ using (var writer = new StreamWriter(fileStream, new UTF8Encoding(false))) // UT
 sw.Stop();
 Console.WriteLine($"Done! Generated {RecordCount:N0} records in {sw.Elapsed.TotalSeconds:F2} seconds.");
 Console.WriteLine($"File size: {new FileInfo(FilePath).Length / 1024 / 1024} MB");
+
