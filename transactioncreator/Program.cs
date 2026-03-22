@@ -43,7 +43,7 @@ using (var writer = new StreamWriter(fileStream, new UTF8Encoding(false))) // UT
     var sb = new StringBuilder(256); // Reusable string builder buffer if we were doing custom formatting
 
     // Pre-calculate date range
-    var startDate = new DateTime(2020, 1, 1);
+    var startDate = new DateTime(2025, 1, 1);
     var rangeDays = (DateTime.Today - startDate).Days;
 
     // Allocate buffer for MID once

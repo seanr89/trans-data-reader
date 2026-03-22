@@ -15,7 +15,7 @@ public class TransactionDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-        
+
         // Map to table and set primary key
         modelBuilder.Entity<Transaction>().ToTable("Transactions");
         modelBuilder.Entity<Transaction>().HasKey(t => t.TransactionId);

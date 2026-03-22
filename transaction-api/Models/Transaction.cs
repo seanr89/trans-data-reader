@@ -17,4 +17,5 @@ public class Transaction
     public string MID { get; set; } = string.Empty;
     public string CardType { get; set; } = string.Empty;
     public string MCC { get; set; } = string.Empty;
+    public string Narrative { get; set; } = string.Empty;
 }

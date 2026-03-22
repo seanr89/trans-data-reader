@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Globalization;
 using CsvHelper;
 using CsvHelper.Configuration;
@@ -41,7 +41,7 @@ class Program
             // Function to start a new importer
             async Task<NpgsqlBinaryImporter> StartImporterAsync(NpgsqlConnection c)
             {
-                return await c.BeginBinaryImportAsync("COPY transactions (TransactionId, AccountId, TransactionDate, TransactionType, TransactionCurrency, TransactionAmount, TransactionNarrative, ReversalIndicator, MID, CardType) FROM STDIN (FORMAT BINARY)");
+                return await c.BeginBinaryImportAsync("COPY transactions (TransactionId, AccountId, TransactionDate, TransactionType, TransactionCurrency, TransactionAmount, TransactionNarrative, ReversalIndicator, MID, CardType, MCC, Narrative) FROM STDIN (FORMAT BINARY)");
             }
 
             var writer = await StartImporterAsync(conn);
@@ -83,6 +83,9 @@ class Program
 
                 // MCC (VARCHAR)
                 writer.Write(csv.GetField<string>(10)!, NpgsqlDbType.Varchar);
+
+                // Narrative (TEXT)
+                writer.Write(string.Empty, NpgsqlDbType.Text); // Initialize as empty for now or read from CSV if added
 
                 rowCount++;
                 currentBatchCount++;
